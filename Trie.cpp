@@ -1,7 +1,8 @@
 #include "Trie.hpp"
 
 Trie::Trie() {
-    root.is_leaf = true;
+    // root.is_leaf is false as is default with all TrieNodes at creation
+    // since the root itself can never terminate a string I think this is sensible
 }
 
 Trie::Trie(const std::vector<std::string> &string_list) {
@@ -11,7 +12,7 @@ Trie::Trie(const std::vector<std::string> &string_list) {
 }
 
 Trie::~Trie() {
-    // std::cout << "Trie Destructor\n";
+    std::cout << "Trie Destructor\n";
     this->clear();
 }
 
@@ -32,7 +33,8 @@ void Trie::insert(const std::string &prefix) {
         curr_node->child_count++;
         curr_node = curr_node->children[idx];
     }
-    curr_node->is_leaf = true; // false by default
+    // the node terminatng the last character of the input is always a leaf
+    curr_node->is_leaf = true; 
 }
 
 bool Trie::search(const std::string &prefix) {
@@ -53,7 +55,7 @@ bool Trie::search(const std::string &prefix) {
 void Trie::clear() {
     std::stack<TrieNode *> node_stack;
     // the root cannot be deleted because it's not dynamically allocated
-    // append all the non null children of the root sidesteps having to check for the root in the while loop
+    // appending all the non null children of the root sidesteps having to check for the root in the stack
     for (TrieNode *child : root.children) {
         if (child) {
             node_stack.push(child);
@@ -73,12 +75,8 @@ void Trie::clear() {
     }
     assert(node_count == 0);
 }
-bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &out_completions) {
-    if (prefix.empty()) {
-        std::cout << "Cannot search for empty string\n";
-        return false;
-    }
 
+bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &out_completions) {
     TrieNode *curr_node = &root;
     std::cout << "Finding completions: " << prefix << "\n";
     for (const char c : prefix) {
@@ -100,7 +98,7 @@ bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &o
             std::cout << "Completion: " << prefix + suffix << "\n"; 
             out_completions.push_back(prefix + suffix);
         }
-        for (int i = 0; i < 26; i++) {
+        for (int i = 0; i < MAX_CHILDREN; i++) {
             TrieNode *child = node->children[i];
             if (child) {
                 node_stack.push(
@@ -112,18 +110,18 @@ bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &o
     return true;
 }
 
-void Trie::remove(const std::string &prefix) {
-    if (prefix.empty()) {
+void Trie::remove(const std::string &string) {
+    if (string.empty()) {
         std::cout << "Unable to remove empty string from Trie.\n";
         return;
     }
     TrieNode *node = &root;
     std::vector<TrieNode *> path;
-    for (const char c : prefix) {
+    for (const char c : string) {
         int idx = std::tolower(c) - 'a';
         TrieNode *child = node->children[idx];
         if (!child) {
-            std::cout << "Input: " << prefix << " does not exist as a prefix.\n";
+            std::cout << "Prefix:  " << string << " can't be removed since it doesn't exist\n";
             return;
         }
         path.push_back(child);
@@ -136,7 +134,7 @@ void Trie::remove(const std::string &prefix) {
         TrieNode *parent = path[i - 1];
         if (child->child_count == 0 && !child->is_leaf) {
             delete child;
-            int idx = std::tolower(prefix[i]) - 'a';
+            int idx = std::tolower(string[i]) - 'a';
             parent->children[idx] = nullptr;
             parent->child_count--;
             node_count--;

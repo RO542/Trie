@@ -8,9 +8,15 @@ int main() {
     trie.insert("word");
     trie.insert("wordy");
     trie.insert("w");
+    trie.insert("someword");
+
+
 
     std::cout << std::endl;
     std::vector<std::string> comp;
+
+
+    trie.getCompletions("", comp);
 
     // Test insert and search
     assert(trie.search("world") == true);
@@ -47,5 +53,11 @@ int main() {
     std::cout << "Test passed: 2 completions found for prefix 'word'." << std::endl;
 
 
-    std::vector<int> vec({0, 1, 2, 3});
+
+
+    comp.clear();
+    trie.getCompletions("", comp);
+    trie.search("w");
+
+
 }

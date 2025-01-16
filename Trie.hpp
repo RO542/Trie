@@ -28,4 +28,5 @@ public:
 private:
     TrieNode root;
     int node_count = 0; // for debug purposes
+    constexpr static int MAX_CHILDREN = 26;
 };
