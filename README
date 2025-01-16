@@ -1,6 +1,11 @@
 Implementation of a Trie/Prefix Tree in C++.
 There are two versions, one is array based while the other is hashtable based in storage of children nodes implemented as a learning exercise to better understand the data structure.
 
+Tries are useful for finding a completion of a string given a partial input match to do things like autocomplete as well as a key value lookup in linear time over a single input word.
+
 Possible Future Optimizations:
+Path Compression
 Merge child nodes with their parent if the they are the only child (parent's child count is 1) bottom up and lazily expand a merged parent on insertion.
-Try to match prefixes using radix/overlapping bits to speed up comparison/search.
+
+Advanced matching
+Learn and implement to match prefixes using bit comparisons like in radix or PATRICIA trees.
