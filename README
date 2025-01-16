@@ -1,6 +1,6 @@
-A basic trie implementation in C++ written with the goal of understanding the data structure better.
+Implementation of a Trie/Prefix Tree in C++.
+There are two versions, one is array based while the other is hashtable based in storage of children nodes implemented as a learning exercise to better understand the data structure.
 
 Possible Future Optimizations:
-Store child nodes inside a hashtable since most children arrays are sparse.
 Merge child nodes with their parent if the they are the only child (parent's child count is 1) bottom up and lazily expand a merged parent on insertion.
 Try to match prefixes using radix/overlapping bits to speed up comparison/search.
