@@ -16,6 +16,7 @@ public:
     void insert(const std::string &prefix);
     void remove(const std::string &prefix);
     void clear();
+    bool isEmpty();
 
     struct TrieNode {
         bool is_leaf = false; // most nodes don't terminate words

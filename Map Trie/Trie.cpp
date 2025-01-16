@@ -16,14 +16,17 @@ Trie::~Trie() {
     this->clear();
 }
 
+bool Trie::isEmpty() {
+    return root.children.empty();
+}
+
 void Trie::insert(const std::string &prefix) {
-    if (prefix.empty()) return;
+    if (prefix.empty()) {
+        return;
+    }
     TrieNode *curr_node = &root;
+    //TODO: clean/normalize the string somehow
     for (const char c : prefix) {
-        // ignore non ascii chars for now 
-        if (!std::isalpha(c)) {
-            continue;
-        }
         char key = std::tolower(c);
         auto pair = curr_node->children.find(key);
         if (pair == curr_node->children.end()) {
@@ -46,7 +49,7 @@ bool Trie::search(const std::string &prefix) {
         TrieNode *child = pair->second;
         curr_node = child;
     }
-    std::cout << "search prefix " << prefix << " -> " << (curr_node->is_leaf) << "\n"; 
+    // std::cout << "search prefix " << prefix << " -> " << (curr_node->is_leaf) << "\n"; 
     return curr_node->is_leaf;
 }
 
@@ -91,7 +94,7 @@ bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &o
         node_stack.pop();
         if (node->is_leaf) {
             std::string completion =  prefix + suffix;
-            std::cout << "completion: " << completion << "\n";
+            // std::cout << "completion: " << completion << "\n";
             out_completions.push_back(completion);
         }
         for (auto[c, child] : node->children) {
@@ -118,7 +121,6 @@ void Trie::remove(const std::string &string) {
         path.push_back({kv->first, kv->second});
         node = kv->second;
     }
-    std::cout << "Performing remove operation \n ";
     node->is_leaf = false;
 
     for (int i = path.size() - 1; i > 0; i--) {
