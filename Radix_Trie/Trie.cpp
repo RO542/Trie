@@ -30,96 +30,86 @@ bool Trie::isEmpty() const {
 }
 
 void Trie::insert(const std::string &word) {
-    TrieNode *curr_node = &root;
-
     size_t word_len = word.length();
     if (word_len == 0) {
         std::cout << "You can not insert an empty string into the trie\n";
         return;
     }
-
-    size_t i = 0;
-    while (i < word_len) {
-        char c = std::tolower(word[i]);
+    size_t char_idx = 0;
+    char c;
+    TrieNode *curr_node = &root;
+    while (char_idx < word_len) {
+        c = std::tolower(word[char_idx]);
         auto kv = curr_node->children.find(c);
         if (kv == curr_node->children.end()) {
+            // if a key lookup fails a node is it's own parent at this tree level
             TrieNode *node = new TrieNode();
             node_count++;
-            node->prefix = word.substr(i + 1);
+            node->prefix = word.substr(char_idx + 1);
             node->ends_word = true;
             curr_node->children[c] = node;
             word_count++;
             return;
         }
 
-        // skip already matched char, begin comparison on the node it indexed
         curr_node = kv->second;
-        i++; 
+        char_idx++; 
         size_t prefix_len = curr_node->prefix.length();
         if (prefix_len == 0) {
             continue;
         }
 
-        std::string word_slice;
-        if (i + prefix_len > word_len) {
-            // This is a partial match case
-            word_slice = word.substr(i);
-        } else {
-            word_slice = word.substr(i, prefix_len);
-            if (word_slice == curr_node->prefix) {
-                // std::cout << "Full match prefix case \n";
-                if (i + prefix_len == word_len) {
-                    // std::cout << "Duplicate Word Insertion -> " << word << "\n";
-                    curr_node->ends_word = true;
-                    return;
-                }
-                // std::cout << "Remainder to Insert " << word.substr(i + prefix_len) << " from " << word << "\n";
-                i += prefix_len;
-                continue; // to next child 
-            }
-        }
-
-        size_t div_idx = 0;
-        for (size_t j = 0; j < std::min(word_len - i, prefix_len); j++) {
-            if (word[i + j] == curr_node->prefix[j]) {
-                div_idx++;
-            } else {
+        size_t max_prefix_overlap = std::min(prefix_len, word_len);
+        std::string word_slice = word.substr(char_idx, max_prefix_overlap);
+        size_t div_idx = 0; // index where the current prefix and relevant portion of word diverge
+        for (div_idx = 0; div_idx < word_slice.length(); div_idx++) {
+            if (curr_node->prefix[div_idx] != word_slice[div_idx]) {
                 break;
             }
         }
-        // std::cout << "diverge index " << idx << "\n";
-        std::string new_common_prefix = curr_node->prefix.substr(0, div_idx);
-        // these two are keys to sibling nodes descending from curr_node
-        char split_child_key = curr_node->prefix[div_idx];
+        // full prefix matches either if EOW mark it, otherwise continue inserting
+        if (div_idx == prefix_len) { 
+            if (char_idx + prefix_len == word_len) {
+                curr_node->ends_word = true;
+                return;
+            }
+            char_idx += prefix_len;
+            continue;
+        }
 
+        // below are node prefix splitting cases
+        char split_key = curr_node->prefix[div_idx];
+        std::string split_prefix = curr_node->prefix.substr(div_idx + 1);
         TrieNode *split_node = new TrieNode();
         node_count++;
-        split_node->prefix = curr_node->prefix.substr(div_idx + 1);
+        split_node->prefix = split_prefix;
         split_node->ends_word = curr_node->ends_word;
-        std::swap(curr_node->children, split_node->children);
 
-        curr_node->prefix = new_common_prefix;
+        // transfer curr_node properties to split child
+        std::swap(split_node->children, curr_node->children);
+        curr_node->prefix = curr_node->prefix.substr(0, div_idx);
         curr_node->ends_word = false;
-        curr_node->children[split_child_key] = split_node;
-
-        char new_child_key = word[i + div_idx];
-        if (new_child_key) {
-            // std::cout << "new child key " << new_child_key << "\n";
-            TrieNode *new_node = new TrieNode();
-            node_count++;
-            new_node->prefix = word.substr(i + div_idx + 1);
-            new_node->ends_word = true;
-            word_count++;
-            curr_node->children[new_child_key] = new_node;
-            // std::cout << "new child prefix " << new_node->prefix << "\n";
-        } else {
-            // if node is split but the key was "" it means it's characters end at curr_node->prefix 
-            // therefore the prefix ends a word 
+        curr_node->children[split_key] = split_node;
+        
+        if (char_idx + div_idx == word_len) {
+            // word matches the new common prefix after splitting, mark EOW return
+            std::cout << "EOW at curr during split\n";
             curr_node->ends_word = true;
+            return;
         }
+
+        // now that a common prefix is guaranteed, the remaining portion of word becomes a compressed node
+        char new_child_key = word[char_idx + div_idx];
+        TrieNode *new_node = new TrieNode();
+        node_count++;
+        new_node->prefix = word.substr(char_idx + div_idx + 1);
+        new_node->ends_word = true;
+        word_count++;
+        curr_node->children[new_child_key] = new_node;
         return;
     }
 }
+
 
 bool Trie::contains(const std::string &word) const  {
     const TrieNode *curr_node = &root;

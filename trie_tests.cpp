@@ -18,6 +18,11 @@ void test_bulk_insert(const std::string &filepath = "words_alpha.txt") {
         trie.insert(line);
     }
     in_file.close();
+    std::vector<std::string>completions;
+    trie.getCompletions("", completions);
+    for (const auto &word: completions) {
+        std::cout << word << "\n";
+    }
     std::cout << "Inserted " << trie.wordCount() << " Words";
 }
 
@@ -139,4 +144,18 @@ void trie_test1() {
 
 int main() {
     test_bulk_insert();
+
+    // Trie trie;
+
+    // trie.insert("hello");
+    // trie.insert("hello");
+    // trie.insert("hit");
+    // trie.insert("hel");
+
+    // std::vector<std::string> comp;
+    // trie.getCompletions("", comp);
+    // for (const auto &word: comp) {
+    //     std::cout << word << "\n";
+    // }
+
 }
