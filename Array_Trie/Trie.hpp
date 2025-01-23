@@ -13,7 +13,12 @@ public:
     Trie(const std::vector<std::string> &string_list);
     ~Trie();
 
-    bool search(const std::string &prefix);
+
+
+    bool isEmpty() const;
+    size_t wordCount() const;
+
+    bool contains(const std::string &prefix);
     bool getCompletions(const std::string &str, std::vector<std::string> &out_completions);
     void insert(const std::string &prefix);
     void remove(const std::string &prefix);
@@ -28,5 +33,6 @@ public:
 private:
     TrieNode root;
     int node_count = 0; // for debug purposes
+    int word_count = 0;
     constexpr static int MAX_CHILDREN = 26;
 };

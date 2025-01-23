@@ -12,12 +12,20 @@ Trie::Trie(const std::vector<std::string> &string_list) {
 }
 
 Trie::~Trie() {
-    std::cout << "Trie Destructor\n";
+    // std::cout << "Trie Destructor\n";
     this->clear();
 }
 
-bool Trie::isEmpty() {
-    return root.children.empty();
+size_t Trie::wordCount() const {
+    return this->word_count;
+}
+
+size_t Trie::nodeCount() const {
+    return this->node_count;
+}
+
+bool Trie::isEmpty() const {
+    return this->wordCount() == 0;
 }
 
 void Trie::insert(const std::string &prefix) {
@@ -25,21 +33,21 @@ void Trie::insert(const std::string &prefix) {
         return;
     }
     TrieNode *curr_node = &root;
-    //TODO: clean/normalize the string somehow
     for (const char c : prefix) {
         char key = std::tolower(c);
         auto pair = curr_node->children.find(key);
         if (pair == curr_node->children.end()) {
-            curr_node->children[key] = new TrieNode(); 
-            node_count++;
+            curr_node->children[key] = new TrieNode();
+            node_count++; // count allocated nodes
         }
         curr_node = curr_node->children[key];
     }
-    curr_node->is_leaf = true; 
+    word_count++;
+    curr_node->ends_word = true; 
 }
 
-bool Trie::search(const std::string &prefix) {
-    TrieNode *curr_node = &root;
+bool Trie::contains(const std::string &prefix) const {
+    const TrieNode *curr_node = &root;
     for (const char c : prefix) {
         char key = std::tolower(c);
         auto pair = curr_node->children.find(key);
@@ -50,14 +58,14 @@ bool Trie::search(const std::string &prefix) {
         curr_node = child;
     }
     // std::cout << "search prefix " << prefix << " -> " << (curr_node->is_leaf) << "\n"; 
-    return curr_node->is_leaf;
+    return curr_node->ends_word;
 }
 
 void Trie::clear() {
     std::stack<TrieNode *> node_stack;
     // the root cannot be deleted because it's not dynamically allocated
     // appending all the non null children of the root sidesteps having to check for the root in the stack
-    for (auto[c, node] : root.children) {
+    for (auto [c, node] : root.children) {
         node_stack.push(node);
     }
 
@@ -71,12 +79,13 @@ void Trie::clear() {
         delete node;
         node_count--;
     }
+    word_count = 0; // should be
     assert(node_count == 0);
 }
 
-bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &out_completions) {
-    TrieNode *curr_node = &root;
-    std::cout << "Finding completions: " << prefix << "\n";
+bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &out_completions) const {
+    const TrieNode *curr_node = &root;
+    // std::cout << "Finding completions: " << prefix << "\n";
     for (const char c : prefix) {
         char key = std::tolower(c);
         auto pair = curr_node->children.find(key);
@@ -87,17 +96,17 @@ bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &o
         curr_node = pair->second;
     }
 
-    std::stack<std::pair<std::string, TrieNode *>>node_stack;
+    std::stack<std::pair<std::string, const TrieNode *>>node_stack;
     node_stack.push({"", curr_node});
     while (!node_stack.empty()) {
         auto [suffix, node] = node_stack.top();
         node_stack.pop();
-        if (node->is_leaf) {
-            std::string completion =  prefix + suffix;
+        if (node->ends_word) {
+            std::string completion = prefix + suffix;
             // std::cout << "completion: " << completion << "\n";
             out_completions.push_back(completion);
         }
-        for (auto[c, child] : node->children) {
+        for (auto [c, child] : node->children) {
             node_stack.push({suffix + c,  child});
         }
     }
@@ -111,7 +120,7 @@ void Trie::remove(const std::string &string) {
     }
     TrieNode *node = &root;
     std::vector<std::pair<char, TrieNode*>> path;
-    for (const char c : string) {
+    for (char c : string) {
         char key = std::tolower(c);
         auto kv = node->children.find(key);
         if (kv == node->children.end()) {
@@ -121,13 +130,14 @@ void Trie::remove(const std::string &string) {
         path.push_back({kv->first, kv->second});
         node = kv->second;
     }
-    node->is_leaf = false;
+    node->ends_word = false;
+    word_count--;
 
     for (int i = path.size() - 1; i > 0; i--) {
         //c2 is the key of the path node in it's parent
         auto [child_key, child] = path[i];
         auto [_, parent] = path[i - 1];
-        if (child->children.empty() && !child->is_leaf) {
+        if (child->children.empty() && !child->ends_word) {
             delete child;
             parent->children.erase(child_key);
             node_count--;

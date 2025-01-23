@@ -1,5 +1,6 @@
 /.vscode
 *.pdb
+*.ilk
 *.exe
 *.rdbg
 *.txt

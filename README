@@ -1,11 +1,18 @@
 Implementation of a Trie/Prefix Tree in C++.
-There are two versions, one is array based while the other is hashtable based in storage of children nodes implemented as a learning exercise to better understand the data structure.
 
-Tries are useful for finding a completion of a string given a partial input match to do things like autocomplete as well as a key value lookup in linear time over a single input word.
+This code contains different implementations of a trie/preifx tree complested as a learning exercise and exploration for use in a larger app. A trie is useful for performing autocomplete of a word given a partial prefix. The data structure also allows linear time lookup with respect to the length of the string being searched. Tries can also be used to store key value pairings.
 
-Possible Future Optimizations:
-Path Compression
-Merge child nodes with their parent if the they are the only child (parent's child count is 1) bottom up and lazily expand a merged parent on insertion.
+Running the code
+You need to have make and a C++ compiler installed.
+In order to run the tests run "make test_all" in the root of this directory
+The words_alpha dataset and a 1000 word text files are is used as input for testing.
+If you are using a compiler other than clang use "make tests_all CXX=[your_cpp_compiler]" example: "make test_all CXX=gcc".
 
-Advanced matching
-Learn and implement to match prefixes using bit comparisons like in radix or PATRICIA trees.
+ArrayTrie - Standard Trie implementation supporting child storage as static arrays indexed by the 26 lowercase characters of the English alphabet.
+Map Trie -  Standard Trie implementation that stores child nodes inside hashtables. This avoids storin
+RadixTrie - Trie implementation where a node can store a prefix common to all descendants limiting the height of the trie, memory consumption, and max traversal distance.
+
+Possible Future Ideas:
+Edit Distance - use ddit distances like Levenshtein distance to allow fuzzy matching/autocomplete.
+Value Storage - Generic value storage at word nodes using templates.
+Non English alphabet - Try other languages/unicode characters as keys.

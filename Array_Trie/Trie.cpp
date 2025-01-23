@@ -16,14 +16,23 @@ Trie::~Trie() {
     this->clear();
 }
 
+size_t Trie::wordCount() const {
+    return this->word_count;
+}
+
+bool Trie::isEmpty() const {
+    return this->wordCount() == 0;
+}
+
+
 void Trie::insert(const std::string &prefix) {
     if (prefix.empty()) return;
     TrieNode *curr_node = &root;
     for (const char c : prefix) {
         // ignore non ascii chars for now 
-        if (!std::isalpha(c)) {
-            continue;
-        }
+        // if (!std::isalpha(c)) {
+        //     continue;
+        // }
         const char c_lower = std::tolower(c);
         int idx = c_lower - 'a';
         if (!curr_node->children[idx]) {
@@ -37,7 +46,7 @@ void Trie::insert(const std::string &prefix) {
     curr_node->is_leaf = true; 
 }
 
-bool Trie::search(const std::string &prefix) {
+bool Trie::contains(const std::string &prefix) {
     TrieNode *curr_node = &root;
     for (const char c : prefix) {
         int idx = std::tolower(c) - 'a';
@@ -71,6 +80,7 @@ void Trie::clear() {
             }
         }
         delete node;
+        node = nullptr;
         node_count--;
     }
     assert(node_count == 0);

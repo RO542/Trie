@@ -10,22 +10,23 @@ public:
     Trie();
     Trie(const std::vector<std::string> &string_list);
     ~Trie();
-
-    bool search(const std::string &prefix);
-    bool getCompletions(const std::string &str, std::vector<std::string> &out_completions);
+    size_t wordCount() const;// for testing/debugging
+    size_t nodeCount() const;// for testing/debugging
+    bool contains(const std::string &prefix) const;
+    bool getCompletions(const std::string &str, std::vector<std::string> &out_completions) const;
     void insert(const std::string &prefix);
     void remove(const std::string &prefix);
     void clear();
-    bool isEmpty();
+    bool isEmpty() const;
 
     struct TrieNode {
-        bool is_leaf = false; // most nodes don't terminate words
+        bool ends_word = false; // most nodes don't terminate words
         std::unordered_map<char, TrieNode *> children;
     };
 
 private:
     TrieNode root;
     int node_count = 0; // for debugging
+    size_t word_count = 0;
 };
-
 
