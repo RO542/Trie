@@ -12,8 +12,8 @@ Trie::Trie(const std::vector<std::string> &string_list) {
 }
 
 Trie::~Trie() {
-    // std::cout << "Trie Destructor\n";
-    // this->clear();
+    std::cout << "Trie Destructor\n";
+    this->clear();
 }
 
 size_t Trie::wordCount() const {
@@ -21,7 +21,6 @@ size_t Trie::wordCount() const {
 }
 
 size_t Trie::nodeCount() const {
-    // debug function
     return this->node_count;
 }
 
@@ -59,11 +58,9 @@ void Trie::insert(const std::string &word) {
             continue;
         }
 
-        size_t max_prefix_overlap = std::min(prefix_len, word_len);
-        std::string word_slice = word.substr(char_idx, max_prefix_overlap);
         size_t div_idx = 0; // index where the current prefix and relevant portion of word diverge
-        for (div_idx = 0; div_idx < word_slice.length(); div_idx++) {
-            if (curr_node->prefix[div_idx] != word_slice[div_idx]) {
+        for (div_idx = 0; div_idx < std::min(word_len, prefix_len); div_idx++) {
+            if (curr_node->prefix[div_idx] != word[char_idx + div_idx]) {
                 break;
             }
         }
@@ -115,8 +112,7 @@ void Trie::insert(const std::string &word) {
 
 bool Trie::contains(const std::string &word) const  {
     const TrieNode *curr_node = &root;
-    size_t word_len = word.length();
-    for (size_t i = 0; i < word_len; /* manual */) {
+    for (size_t i = 0; i < word.length(); /* manual */) {
         char c = std::tolower(word[i]);
         auto kv = curr_node->children.find(c);
         if (kv == curr_node->children.end()) {
@@ -140,24 +136,22 @@ bool Trie::contains(const std::string &word) const  {
 
 void Trie::clear() {
     std::stack<TrieNode *> node_stack;
-    // the root cannot be deleted because it's not dynamically allocated
-    // appending all the non null children of the root sidesteps having to check for the root in the stack
+    // the root cannot be deleted because it's not dynamically allocated, front load it's children
     for (auto [c, node] : root.children) {
         node_stack.push(node);
     }
-
     while (!node_stack.empty()) {
         TrieNode *node = node_stack.top();
         node_stack.pop();
         for (auto [c, child] : node->children) {
             node_stack.push(child);
         }
-        // the hashtables themselves are deleted 
         delete node;
         node_count--;
     }
-    word_count = 0; // should be
     assert(node_count == 0);
+    word_count = 0;
+    std::cout << "Succesfully cleared all nodes from the trie\n";
 }
 
 bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &out_completions) const {
@@ -178,20 +172,17 @@ bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &o
         ++i;
 
         size_t prefix_len = curr_node->prefix.length();
-        size_t max_overlap = std::min(prefix_len, word_len);
         size_t div_idx = 0;
-        std::string slice = prefix.substr(i, max_overlap);
-        for (size_t div_idx = 0; div_idx < max_overlap; div_idx++) {
-            if (slice[div_idx] != curr_node->prefix[div_idx]) {
+        for (div_idx = 0; div_idx < std::min(word_len, prefix_len); div_idx++) {
+            if (prefix[i + div_idx] != curr_node->prefix[div_idx]) {
                 break;
             }
         }
-        // if div_idx is 0, we already matched c so curr_node is the root of completions 
-        // if partial prefix match break
-        // if full prefix match goto next node
-        if (div_idx == i + prefix_len)
-            i += curr_node->prefix.length();
-        else if (div_idx >= 0) 
+        // if full prefix match, try a stricter match
+        // else accept current partial match
+        if (div_idx == i + prefix_len) 
+            i += prefix_len;
+        else if (div_idx >= 0)
             break;
     }
 
@@ -201,39 +192,55 @@ bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &o
         auto [suffix, node] = node_stack.top();
         node_stack.pop();
         if (node->ends_word) {
-            std::cout << "completion: " << prefix +  suffix << "\n";
+            // std::cout << "comp: " << prefix +  suffix << "\n";
             out_completions.push_back(prefix + suffix);
         }
-        for (const auto [c, child] : node->children) {
-            node_stack.push({suffix + c + child->prefix, child});
+        for (const auto [char_key, child] : node->children) {
+            node_stack.push({suffix + char_key + child->prefix, child});
         }
     }
     return true;
 }
 
-void Trie::remove(const std::string &string) {
-
-    /*
-    TODO:
-    if (string.empty()) {
+void Trie::remove(const std::string &word) {
+    if (word.empty()) {
         std::cout << "Unable to remove empty string from Trie.\n";
         return;
     }
-    TrieNode *node = &root;
+    TrieNode *curr_node = &root;
     std::vector<std::pair<char, TrieNode*>> path;
-    for (char c : string) {
-        char key = std::tolower(c);
-        auto kv = node->children.find(key);
-        if (kv == node->children.end()) {
-            std::cout << "Prefix:  " << string << " can't be removed since it doesn't exist\n";
+    size_t i = 0; 
+    size_t word_len = word.length();
+    char c;
+    while (i < word_len) {
+        c = std::tolower(word[i]);
+        auto kv = curr_node->children.find(c);
+        if (kv == curr_node->children.end()) {
             return;
         }
-        path.push_back({kv->first, kv->second});
-        node = kv->second;
+
+        ++i;
+        curr_node = kv->second;
+        path.push_back({c, curr_node});
+
+        size_t prefix_len = curr_node->prefix.length();
+        size_t div = 0;
+        for (div = 0; div < std::min(word_len, prefix_len); div++) {
+            if (word[i + div] != curr_node->prefix[div]) {
+                return;
+            }
+        }
+        if (curr_node->ends_word) {
+            break; // word found, end traveral
+        }
+        i += prefix_len;
     }
-    node->ends_word = false;
+    // std::cout << "final node in path: " << curr_node->prefix << "\n";
+    
+    curr_node->ends_word = false;
     word_count--;
 
+    // bactrack and delete all nodes with no children
     for (int i = path.size() - 1; i > 0; i--) {
         //c2 is the key of the path node in it's parent
         auto [child_key, child] = path[i];
@@ -243,10 +250,8 @@ void Trie::remove(const std::string &string) {
             parent->children.erase(child_key);
             node_count--;
         } else {
-            // if a node has children or is not a leaf that node the input string is a substring of a greater string
-            // we return to keep from disturbing the remaining nodes in the stack which are shared by both
+            // stop athe first node that either ends a word or has children, it's needed by some other word in the table
             return;
         }
     }
-    */
 }

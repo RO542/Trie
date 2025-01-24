@@ -16,3 +16,9 @@ Possible Future Ideas:
 Edit Distance - use ddit distances like Levenshtein distance to allow fuzzy matching/autocomplete.
 Value Storage - Generic value storage at word nodes using templates.
 Non English alphabet - Try other languages/unicode characters as keys.
+
+Try using an array to store children + bitmap of known character set for fast check of node children.
+Try using a sorted array to keep child nodes  stored in a compact. 
+
+
+

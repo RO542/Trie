@@ -75,7 +75,6 @@ void Trie::clear() {
         for (auto [c, child] : node->children) {
             node_stack.push(child);
         }
-        // the hashtables themselves are deleted 
         delete node;
         node_count--;
     }

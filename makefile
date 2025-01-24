@@ -1,5 +1,5 @@
 CXX := clang
-FLAGS := -O3 -std=c++17 #cpp 17 for std::filesystem
+FLAGS := -g -std=c++17 #cpp 17 for std::filesystem
 
 ROOTDIR := $(realpath .)
 MAP_TRIE_DIR  := $(ROOTDIR)/Map_Trie/
