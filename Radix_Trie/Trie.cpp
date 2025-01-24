@@ -2,8 +2,7 @@
 
 
 Trie::Trie() {
-    // the root node is always a leaf as it begins but never terminates any inserted string
-    root.ends_word = false;
+    root.ends_word = false; // root never terminates a word or has a prefix of it's own
 }
 
 Trie::Trie(const std::vector<std::string> &string_list) {
@@ -22,6 +21,7 @@ size_t Trie::wordCount() const {
 }
 
 size_t Trie::nodeCount() const {
+    // debug function
     return this->node_count;
 }
 
@@ -35,9 +35,9 @@ void Trie::insert(const std::string &word) {
         std::cout << "You can not insert an empty string into the trie\n";
         return;
     }
-    size_t char_idx = 0;
-    char c;
     TrieNode *curr_node = &root;
+    char c;
+    size_t char_idx = 0;
     while (char_idx < word_len) {
         c = std::tolower(word[char_idx]);
         auto kv = curr_node->children.find(c);
@@ -67,8 +67,10 @@ void Trie::insert(const std::string &word) {
                 break;
             }
         }
+
         // full prefix matches either if EOW mark it, otherwise continue inserting
         if (div_idx == prefix_len) { 
+            // prefix terminates word 
             if (char_idx + prefix_len == word_len) {
                 curr_node->ends_word = true;
                 return;
@@ -92,7 +94,7 @@ void Trie::insert(const std::string &word) {
         curr_node->children[split_key] = split_node;
         
         if (char_idx + div_idx == word_len) {
-            // word matches the new common prefix after splitting, mark EOW return
+            // prefix terminates word after splitting
             std::cout << "EOW at curr during split\n";
             curr_node->ends_word = true;
             return;
@@ -107,9 +109,9 @@ void Trie::insert(const std::string &word) {
         word_count++;
         curr_node->children[new_child_key] = new_node;
         return;
+        // can the above insertion be replace with char_idx += div_idx ? 
     }
 }
-
 
 bool Trie::contains(const std::string &word) const  {
     const TrieNode *curr_node = &root;
@@ -135,8 +137,6 @@ bool Trie::contains(const std::string &word) const  {
     }
     return curr_node->ends_word;
 }
-
-
 
 void Trie::clear() {
     std::stack<TrieNode *> node_stack;
@@ -166,29 +166,42 @@ bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &o
 
     size_t word_len = prefix.length();
     size_t i = 0;
-    //FIXME:: fix traversal to end of input prefix, currently all completions from root are printed
-    // while (i < word_len) {
-    //     char c = std::tolower(prefix[i]);
-    //     auto kv = curr_node->children.find(c);
-    //     if (kv == curr_node->children.end()) {
-    //         std::cout << "Failed key lookup " << c << "\n";
-    //         return false;
-    //     }
-    //     curr_node = kv->second;
-    //     ++i;
-    //     if (curr_node->prefix != prefix.substr(i, curr_node->prefix.length())) {
-    //         std::cout << "Failed to match prefix: " << curr_node->prefix << " with " << prefix.substr(i) << "\n";
-    //         return false;
-    //     }
-    //     i += curr_node->prefix.length();
-    // }
+    char c;
+    while (i < word_len) {
+        c = std::tolower(prefix[i]);
+        auto kv = curr_node->children.find(c);
+        if (kv == curr_node->children.end()) {
+            std::cout << "Failed key lookup " << c << "\n";
+            return false;
+        }
+        curr_node = kv->second;
+        ++i;
+
+        size_t prefix_len = curr_node->prefix.length();
+        size_t max_overlap = std::min(prefix_len, word_len);
+        size_t div_idx = 0;
+        std::string slice = prefix.substr(i, max_overlap);
+        for (size_t div_idx = 0; div_idx < max_overlap; div_idx++) {
+            if (slice[div_idx] != curr_node->prefix[div_idx]) {
+                break;
+            }
+        }
+        // if div_idx is 0, we already matched c so curr_node is the root of completions 
+        // if partial prefix match break
+        // if full prefix match goto next node
+        if (div_idx == i + prefix_len)
+            i += curr_node->prefix.length();
+        else if (div_idx >= 0) 
+            break;
+    }
+
     std::stack<std::pair<std::string, const TrieNode *>>node_stack;
-    node_stack.push({"", curr_node});
+    node_stack.push({curr_node->prefix, curr_node});
     while (!node_stack.empty()) {
         auto [suffix, node] = node_stack.top();
         node_stack.pop();
         if (node->ends_word) {
-            // std::cout << "completion: " << prefix +  suffix << "\n";
+            std::cout << "completion: " << prefix +  suffix << "\n";
             out_completions.push_back(prefix + suffix);
         }
         for (const auto [c, child] : node->children) {

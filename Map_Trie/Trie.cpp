@@ -1,8 +1,8 @@
 #include "Trie.hpp"
 
-
 Trie::Trie() {
     // the root node is always a leaf as it begins but never terminates any inserted string
+    this->root.ends_word = false;
 }
 
 Trie::Trie(const std::vector<std::string> &string_list) {
