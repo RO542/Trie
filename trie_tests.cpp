@@ -19,7 +19,7 @@ void test_bulk_insert(const std::string &filepath = "words_alpha.txt") {
     }
     in_file.close();
     std::vector<std::string>completions;
-    trie.getCompletions("h", completions);
+    trie.getCompletions("", completions);
     for (const auto &word: completions) {
         std::cout << word << "\n";
     }

@@ -92,7 +92,7 @@ void Trie::insert(const std::string &word) {
         
         if (char_idx + div_idx == word_len) {
             // prefix terminates word after splitting
-            std::cout << "EOW at curr during split\n";
+            // std::cout << "EOW at curr during split\n";
             curr_node->ends_word = true;
             return;
         }
@@ -173,7 +173,7 @@ bool Trie::getCompletions(const std::string &prefix, std::vector<std::string> &o
 
         size_t prefix_len = curr_node->prefix.length();
         size_t div_idx = 0;
-        for (div_idx = 0; div_idx < std::min(word_len, prefix_len); div_idx++) {
+        for (div_idx = 0; div_idx < std::min(word_len - i, prefix_len); div_idx++) {
             if (prefix[i + div_idx] != curr_node->prefix[div_idx]) {
                 break;
             }
